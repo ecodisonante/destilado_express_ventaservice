@@ -85,6 +85,13 @@ public class VentaController {
         return ResponseEntity.ok(productoActualizado);
     }
 
+    // Actualizar un producto en la venta
+    @PutMapping("/{ventaId}")
+    public ResponseEntity<Venta> finalizarVenta(@PathVariable Long ventaId) {
+        Venta ventaFinalizada = ventaService.finalizarVenta(ventaId);
+        return ResponseEntity.ok(ventaFinalizada);
+    }
+
     // Eliminar un producto de la venta
     @DeleteMapping("/{ventaId}/productos/{productoId}")
     public ResponseEntity<Void> eliminarProducto(

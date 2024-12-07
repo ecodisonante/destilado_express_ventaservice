@@ -13,6 +13,7 @@ import com.destilado_express.ventaservice.repository.VentaRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VentaService {
@@ -31,7 +32,7 @@ public class VentaService {
 
     // Obtener todas las ventas
     public List<Venta> obtenerVentas() {
-        return ventaRepository.findActivaFalse();
+        return ventaRepository.findByActiva(false);
     }
 
     // Obtener una venta por ID
@@ -41,9 +42,8 @@ public class VentaService {
     }
 
     // Obtener la venta activa del usuario
-    public Venta obtenerVentaActivaPorUsuario(Long userId) {
-        return ventaRepository.findByUserIdAndActivaTrue(userId)
-                .orElseThrow(() -> new RuntimeException("No se encontró una venta activa para el usuario: " + userId));
+    public Optional<Venta> obtenerVentaActivaPorUsuario(Long userId) {
+        return ventaRepository.findByUserIdAndActivaTrue(userId);
     }
 
     // Crear una nueva venta
@@ -72,6 +72,14 @@ public class VentaService {
         productoExistente.setMonto(producto.getCantidad() * producto.getPrecioUnidad());
 
         return ventaProductoRepository.save(productoExistente);
+    }
+
+    // Actualiza la venta como finalizada (activo=false)
+    public Venta finalizarVenta(Long ventaId) {
+        Venta venta = getUpdatedVenta(ventaId);
+        venta.setActiva(false);
+        ventaRepository.save(venta);
+        return venta;
     }
 
     // Eliminar un producto de la venta

@@ -11,6 +11,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     
     // Obtener la venta activa de un usuario (si solo hay una)
     Optional<Venta> findByUserIdAndActivaTrue(Long userId);
-    List<Venta> findActivaFalse();
+    List<Venta> findByActiva(Boolean activa);
 
 }
