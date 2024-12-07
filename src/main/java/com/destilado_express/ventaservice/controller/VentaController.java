@@ -34,12 +34,15 @@ public class VentaController {
     @GetMapping("/activa")
     public ResponseEntity<VentaDTO> obtenerVentaActiva() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Venta venta = ventaService.obtenerVentaActivaPorUsuario(userId);
-        if (venta == null) {
+        Venta venta;
+
+        var existent = ventaService.obtenerVentaActivaPorUsuario(userId);
+        if (!existent.isPresent()) {
             var nueva = new Venta();
             nueva.setUserId(userId);
             venta = ventaService.crearVenta(nueva);
-        }
+        } else
+            venta = existent.get();
 
         return ResponseEntity.ok(ventaService.toVentaDTO(venta));
     }
