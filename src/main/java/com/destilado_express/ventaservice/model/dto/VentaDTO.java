@@ -10,7 +10,7 @@ public class VentaDTO {
 
     private Long id;
     private Long userId;
-    private List<ProductoDTO> productos;
+    private List<ProductoDTO> detalle;
     private Boolean activa = true;
     private LocalDateTime created;
     private LocalDateTime updated;

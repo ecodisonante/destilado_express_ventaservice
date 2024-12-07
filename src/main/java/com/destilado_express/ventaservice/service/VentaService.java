@@ -31,7 +31,7 @@ public class VentaService {
 
     // Obtener todas las ventas
     public List<Venta> obtenerVentas() {
-        return ventaRepository.findAll();
+        return ventaRepository.findActivaFalse();
     }
 
     // Obtener una venta por ID
@@ -96,7 +96,7 @@ public class VentaService {
             prodList.add(producto);
         }
 
-        ventaDTO.setProductos(prodList);
+        ventaDTO.setDetalle(prodList);
 
         return ventaDTO;
     }
