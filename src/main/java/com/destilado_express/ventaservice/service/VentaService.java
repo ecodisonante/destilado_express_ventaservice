@@ -4,52 +4,81 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.destilado_express.ventaservice.model.Venta;
+import com.destilado_express.ventaservice.model.VentaProducto;
+import com.destilado_express.ventaservice.repository.VentaProductoRepository;
 import com.destilado_express.ventaservice.repository.VentaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class VentaService {
 
-    private VentaRepository ventaRepository;
+    private final VentaRepository ventaRepository;
+    private final VentaProductoRepository ventaProductoRepository;
 
     @Autowired
-    public VentaService(VentaRepository ventaRepository) {
+    public VentaService(VentaRepository ventaRepository, VentaProductoRepository ventaProductoRepository) {
         this.ventaRepository = ventaRepository;
+        this.ventaProductoRepository = ventaProductoRepository;
     }
 
     // Obtener todas las ventas
-    public List<Venta> getAllVentas() {
+    public List<Venta> obtenerVentas() {
         return ventaRepository.findAll();
     }
 
     // Obtener una venta por ID
-    public Venta getVentaById(Long id) {
-        Optional<Venta> venta = ventaRepository.findById(id);
-        return venta.orElse(null);
+    public Venta obtenerVentaPorId(Long ventaId) {
+        return ventaRepository.findById(ventaId)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+    }
+
+    // Obtener la venta activa del usuario
+    public Venta obtenerVentaActivaPorUsuario(Long userId) {
+        return ventaRepository.findByUserIdAndActivaTrue(userId)
+                .orElseThrow(() -> new RuntimeException("No se encontró una venta activa para el usuario: " + userId));
     }
 
     // Crear una nueva venta
-    public Venta createVenta(Venta venta) {
+    public Venta crearVenta(Venta venta) {
         return ventaRepository.save(venta);
     }
 
-    // Actualizar una venta existente
-    public Venta updateVenta(Long id, Venta venta) {
-        if (ventaRepository.existsById(id)) {
-            venta.setId(id);
-            return ventaRepository.save(venta);
-        }
-        return null;
+    // Agregar un producto a la venta
+    public VentaProducto agregarProducto(Long ventaId, VentaProducto producto) {
+        Venta venta = getUpdatedVenta(ventaId);
+        producto.setVenta(venta);
+        producto.setMonto(producto.getPrecioUnidad() * producto.getCantidad());
+        return ventaProductoRepository.save(producto);
     }
 
-    // Eliminar una venta por ID
-    public boolean deleteVenta(Long id) {
-        if (ventaRepository.existsById(id)) {
-            ventaRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    // Actualizar un producto en la venta
+    public VentaProducto actualizarProducto(Long ventaId, Long productoId, VentaProducto producto) {
+        VentaProducto productoExistente = ventaProductoRepository.findByIdProductoAndVentaId(productoId, ventaId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado en la venta"));
+
+        Venta venta = getUpdatedVenta(ventaId);
+        productoExistente.setVenta(venta);
+
+        productoExistente.setCantidad(producto.getCantidad());
+        productoExistente.setPrecioUnidad(producto.getPrecioUnidad());
+        productoExistente.setMonto(producto.getCantidad() * producto.getPrecioUnidad());
+
+        return ventaProductoRepository.save(productoExistente);
+    }
+
+    // Eliminar un producto de la venta
+    public void eliminarProducto(Long ventaId, Long productoId) {
+        VentaProducto productoExistente = ventaProductoRepository.findByIdProductoAndVentaId(productoId, ventaId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado en la venta"));
+
+        ventaProductoRepository.delete(productoExistente);
+    }
+
+    private Venta getUpdatedVenta(Long ventaId) {
+        Venta venta = obtenerVentaPorId(ventaId);
+        venta.setUpdated(LocalDateTime.now());
+        return venta;
     }
 }
