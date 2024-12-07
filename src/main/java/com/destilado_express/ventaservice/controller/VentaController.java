@@ -2,18 +2,20 @@ package com.destilado_express.ventaservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.destilado_express.ventaservice.model.Venta;
+import com.destilado_express.ventaservice.model.VentaProducto;
 import com.destilado_express.ventaservice.service.VentaService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/ventas")
+@RequestMapping("/api/ventas")
 public class VentaController {
 
-    private VentaService ventaService;
+    private final VentaService ventaService;
 
     @Autowired
     public VentaController(VentaService ventaService) {
@@ -22,14 +24,30 @@ public class VentaController {
 
     // Obtener todas las ventas
     @GetMapping
-    public List<Venta> getAllVentas() {
-        return ventaService.getAllVentas();
+    public ResponseEntity<List<Venta>> obtenerVentas() {
+        List<Venta> productos = ventaService.obtenerVentas();
+        return ResponseEntity.ok(productos);
     }
 
+    // Obtener la venta activa del usuario
+    @GetMapping("/activa")
+    public ResponseEntity<Venta> obtenerVentaActiva() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Venta venta = ventaService.obtenerVentaActivaPorUsuario(userId);
+        if (venta != null) {
+            return ResponseEntity.ok(venta);
+        } else {
+            var nueva = new Venta();
+            nueva.setUserId(userId);
+            return ResponseEntity.ok(ventaService.crearVenta(venta));
+        }
+    }
+
+    // TODO admin
     // Obtener una venta por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Venta> getVentaById(@PathVariable Long id) {
-        Venta venta = ventaService.getVentaById(id);
+    @GetMapping("/{ventaId}")
+    public ResponseEntity<Venta> obtenerVenta(@PathVariable Long ventaId) {
+        Venta venta = ventaService.obtenerVentaPorId(ventaId);
         if (venta != null) {
             return ResponseEntity.ok(venta);
         }
@@ -38,28 +56,35 @@ public class VentaController {
 
     // Crear una nueva venta
     @PostMapping
-    public ResponseEntity<Venta> createVenta(@RequestBody Venta venta) {
-        Venta createdVenta = ventaService.createVenta(venta);
-        return ResponseEntity.ok(createdVenta);
+    public ResponseEntity<Venta> crearVenta(@RequestBody Venta venta) {
+        Venta nuevaVenta = ventaService.crearVenta(venta);
+        return ResponseEntity.ok(nuevaVenta);
     }
 
-    // Actualizar una venta existente
-    @PutMapping("/{id}")
-    public ResponseEntity<Venta> updateVenta(@PathVariable Long id, @RequestBody Venta venta) {
-        Venta updatedVenta = ventaService.updateVenta(id, venta);
-        if (updatedVenta != null) {
-            return ResponseEntity.ok(updatedVenta);
-        }
-        return ResponseEntity.notFound().build();
+    // Agregar un producto a la venta (carrito)
+    @PostMapping("/{ventaId}/productos")
+    public ResponseEntity<VentaProducto> agregarProducto(
+            @PathVariable Long ventaId, @RequestBody VentaProducto producto) {
+        VentaProducto nuevoProducto = ventaService.agregarProducto(ventaId, producto);
+        return ResponseEntity.ok(nuevoProducto);
     }
 
-    // Eliminar una venta por ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVenta(@PathVariable Long id) {
-        boolean deleted = ventaService.deleteVenta(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    // Actualizar un producto en la venta
+    @PutMapping("/{ventaId}/productos/{productoId}")
+    public ResponseEntity<VentaProducto> actualizarProducto(
+            @PathVariable Long ventaId,
+            @PathVariable Long productoId,
+            @RequestBody VentaProducto producto) {
+        VentaProducto productoActualizado = ventaService.actualizarProducto(ventaId, productoId, producto);
+        return ResponseEntity.ok(productoActualizado);
     }
+
+    // Eliminar un producto de la venta
+    @DeleteMapping("/{ventaId}/productos/{productoId}")
+    public ResponseEntity<Void> eliminarProducto(
+            @PathVariable Long ventaId, @PathVariable Long productoId) {
+        ventaService.eliminarProducto(ventaId, productoId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
