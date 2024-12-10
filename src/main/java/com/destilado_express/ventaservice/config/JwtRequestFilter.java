@@ -53,8 +53,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // Agregar roles al usuario
             List<GrantedAuthority> authorities = Collections
                     .singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(id,
-                    null, authorities);
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    id, token, authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
             filterChain.doFilter(request, response);

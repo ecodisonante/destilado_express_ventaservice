@@ -41,7 +41,7 @@ public class SecurityConfig {
                         // solo usuarios
                         .requestMatchers(HttpMethod.GET, ventasMapping + "/activa").hasRole(userRole)
                         .requestMatchers(HttpMethod.POST, ventasMapping).hasRole(userRole) // crear venta
-                        .requestMatchers(HttpMethod.PUT, ventasMapping).hasRole(userRole)
+                        .requestMatchers(HttpMethod.PUT, ventasMapping + "/{id}").hasRole(userRole)
                         .requestMatchers(HttpMethod.GET, ventasMapping + "/{ventaId}/productos").hasRole(userRole) // Obtener productos de venta
                         .requestMatchers(HttpMethod.POST, ventasMapping + "/{ventaId}/productos").hasRole(userRole) // Agregar producto a venta
                         .requestMatchers(HttpMethod.PUT, ventasMapping + "/{ventaId}/productos/{productoId}").hasRole(userRole) // Actualizar producto venta

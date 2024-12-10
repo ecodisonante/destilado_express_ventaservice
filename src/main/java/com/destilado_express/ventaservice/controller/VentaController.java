@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.destilado_express.ventaservice.model.Venta;
 import com.destilado_express.ventaservice.model.VentaProducto;
+import com.destilado_express.ventaservice.model.dto.VentaDTO;
 import com.destilado_express.ventaservice.service.VentaService;
 
 import java.util.List;
@@ -31,27 +32,32 @@ public class VentaController {
 
     // Obtener la venta activa del usuario
     @GetMapping("/activa")
-    public ResponseEntity<Venta> obtenerVentaActiva() {
+    public ResponseEntity<VentaDTO> obtenerVentaActiva() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Venta venta = ventaService.obtenerVentaActivaPorUsuario(userId);
-        if (venta != null) {
-            return ResponseEntity.ok(venta);
-        } else {
+        Venta venta;
+
+        var existent = ventaService.obtenerVentaActivaPorUsuario(userId);
+        if (!existent.isPresent()) {
             var nueva = new Venta();
             nueva.setUserId(userId);
-            return ResponseEntity.ok(ventaService.crearVenta(venta));
-        }
+            venta = ventaService.crearVenta(nueva);
+        } else
+            venta = existent.get();
+
+        return ResponseEntity.ok(ventaService.toVentaDTO(venta));
     }
 
-    // TODO admin
-    // Obtener una venta por ID
+    // Obtener la venta activa del usuario
     @GetMapping("/{ventaId}")
-    public ResponseEntity<Venta> obtenerVenta(@PathVariable Long ventaId) {
+    public ResponseEntity<VentaDTO> obtenerVentaDetalle(@PathVariable Long ventaId) {
         Venta venta = ventaService.obtenerVentaPorId(ventaId);
+
         if (venta != null) {
-            return ResponseEntity.ok(venta);
+            return ResponseEntity.ok(ventaService.toVentaDTO(venta));
         }
+
         return ResponseEntity.notFound().build();
+
     }
 
     // Crear una nueva venta
@@ -77,6 +83,13 @@ public class VentaController {
             @RequestBody VentaProducto producto) {
         VentaProducto productoActualizado = ventaService.actualizarProducto(ventaId, productoId, producto);
         return ResponseEntity.ok(productoActualizado);
+    }
+
+    // Actualizar un producto en la venta
+    @PutMapping("/{ventaId}")
+    public ResponseEntity<Venta> finalizarVenta(@PathVariable Long ventaId) {
+        Venta ventaFinalizada = ventaService.finalizarVenta(ventaId);
+        return ResponseEntity.ok(ventaFinalizada);
     }
 
     // Eliminar un producto de la venta
