@@ -13,9 +13,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
 public class Venta {
 
     @Id
@@ -38,7 +40,7 @@ public class Venta {
     private LocalDateTime updated;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.created = LocalDateTime.now();
     }
 
